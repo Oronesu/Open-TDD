@@ -35,3 +35,54 @@ Mobs:
         couleur = violet (238,130,238)
         dégâts = 40
 
+
+
+Tailles des Tours
+Tour Normale (Sniper) :
+
+Largeur : 30 pixels
+
+Hauteur : 60 pixels
+
+Lance-Flammes :
+
+Largeur : 35 pixels
+
+Hauteur : 70 pixels
+
+Lance-Grenades :
+
+Largeur : 40 pixels
+
+Hauteur : 80 pixels
+
+Tour Mortier :
+
+Largeur : 45 pixels
+
+Hauteur : 90 pixels
+
+Tailles des Mobs
+Soldat :
+
+Largeur : 20 pixels
+
+Hauteur : 20 pixels
+
+Capitaine :
+
+Largeur : 25 pixels
+
+Hauteur : 25 pixels
+
+Général :
+
+Largeur : 30 pixels
+
+Hauteur : 30 pixels
+
+Char :
+
+Largeur : 60 pixels
+
+Hauteur : 40 pixels (proportionnellement plus long que large)
