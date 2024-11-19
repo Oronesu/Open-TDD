@@ -9,7 +9,7 @@ pygame.init()
 
 # Définir les dimensions de la fenêtre
 largeur = 1024  # Largeur augmentée pour un écran plus grand
-hauteur = 768  # Hauteur augmentée pour maintenir le ratio 4:3
+hauteur = 768   # Hauteur augmentée pour maintenir le ratio 4:3
 
 # Créer la fenêtre
 fenetre = pygame.display.set_mode((largeur, hauteur))
@@ -36,7 +36,7 @@ path = [
 ]
 
 # Créer les objets
-mob1 = Mobs.Mob(path, 20, 20, (255, 0, 0))
+mobs = [Mobs.Mob(path, 'Tank')]
 towers = []
 
 # Instancier la barre d'outils
@@ -73,15 +73,19 @@ while running:
     timer = f'{minutes:02}:{secondes:02}'
     toolbar.draw(fenetre, vie=100, argent=500, timer=timer, vague=1)
 
-    # Dessiner les objets
-    mob1.draw(fenetre)
+    # Dessiner les mobs
+    for mob in mobs:
+        if mob.active:
+            mob.draw(fenetre)
+            mob.move()
+    # Supprimer les mobs inactifs
+    mobs = [mob for mob in mobs if mob.active]
 
     # Dessiner les tours placés
     for tower in towers:
         tower.draw(fenetre)
 
     tick_clock.tick(tick)
-    mob1.move()
 
     # Mettre à jour l'affichage
     pygame.display.flip()
