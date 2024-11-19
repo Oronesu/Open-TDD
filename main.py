@@ -57,7 +57,7 @@ while running:
     world_trade_center.draw(fenetre)
 
     tick_clock.tick(tick)
-    #mob1.move()
+    mob1.move()
 
     # Mettre à jour l'affichage
     pygame.display.flip()
