@@ -12,6 +12,7 @@ class Mob:
         pygame.draw.rect(surf, self.color, self.rect)
 
 
-
+    def salope(self):
+        print("Ducon")
 
 
