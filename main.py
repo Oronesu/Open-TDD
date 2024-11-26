@@ -1,36 +1,20 @@
 import pygame
 import sys
 import Mobs
-import Tours
+import Towers
 import Toolbar
 
 # Initialisation de Pygame
 pygame.init()
 
-# Définir les dimensions de la fenêtre
-largeur = 1024  # Largeur augmentée pour un écran plus grand
-hauteur = 768   # Hauteur augmentée pour maintenir le ratio 4:3
-
-# Créer la fenêtre
-fenetre = pygame.display.set_mode((largeur, hauteur))
-pygame.display.set_caption("Ma Fenêtre Pygame")
-
-# Définir la largeur de la zone de jeu (en dehors de la toolbar)
-largeur_zone_jeu = largeur - 224  # Par exemple, la toolbar prend les derniers 100 pixels
-
-# Clock pour gérer les FPS
-clock = pygame.time.Clock()
-fps = 60
-
-# Ticks pour gérer la physique du jeu
-tick_clock = pygame.time.Clock()
-tick = 20
-
-# Couleur de fond (RGB)
-couleur_fond = [64, 68, 29]
-
-# Chemin
-path = [
+# Constantes
+WIDTH = 1024
+HEIGHT = 768
+GAME_AREA_WIDTH = WIDTH - 224
+FPS = 60
+TICK = 30
+BACKGROUND_COLOR = (64, 68, 29)
+PATH = [
     (0, 100), (50, 100), (100, 100), (150, 100), (200, 100),
     (200, 150), (200, 200), (250, 200), (300, 200), (350, 200),
     (400, 200), (400, 250), (400, 300), (450, 300), (500, 300),
@@ -38,78 +22,104 @@ path = [
     (700, 400), (750, 400), (800, 400)
 ]
 
-# Créer les objets
-mobs = [Mobs.Mob(path, 'Tank')]
-towers = []
 
-# Instancier la barre d'outils
-toolbar = Toolbar.Toolbar(largeur, hauteur)
+def init_window():
+    window = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Open TDD")
+    return window
 
-# Etat de placement et tour fantôme
-placing_tower = False
-phantom_tower = None
 
-# Boucle principale
-running = True
-while running:
-    # Gérer les événements
+def create_mobs():
+    return [
+        Mobs.Mob(PATH, 'Tank'),
+        Mobs.Mob(PATH, 'Sergeant'),
+        Mobs.Mob(PATH, 'Tank'),
+        Mobs.Mob(PATH, 'Boss')
+    ]
+
+
+def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            return False, placing_tower, phantom_tower
+
+        keys = pygame.key.get_pressed()
+        if mobs and (event.type == pygame.KEYDOWN and keys[pygame.K_DOWN]):
+            mobs[0].speed -= 1
+        elif mobs and (event.type == pygame.KEYDOWN and keys[pygame.K_UP]):
+            mobs[0].speed += 1
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
             if toolbar.is_button_clicked(event.pos):
                 placing_tower = True
-                phantom_tower = Tours.Tour(x, y, 25, 100, (0, 0, 255))  # Initialiser la tour fantôme
+                phantom_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
             elif placing_tower:
-                new_tower = Tours.Tour(x, y, 25, 100, (0, 0, 255))
-                if new_tower.is_within_bounds(largeur, largeur_zone_jeu):
+                new_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
+                if new_tower.is_within_bounds(WIDTH, GAME_AREA_WIDTH):
                     towers.append(new_tower)
                 placing_tower = False
-                phantom_tower = None  # Réinitialiser la tour fantôme
-
+                phantom_tower = None
         elif event.type == pygame.MOUSEMOTION and placing_tower:
             x, y = event.pos
-            phantom_tower = Tours.Tour(x, y, 25, 100, (0, 0, 255))
+            phantom_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
+    return True, placing_tower, phantom_tower
 
-    # Remplir la fenêtre avec la couleur de fond
-    fenetre.fill(tuple(couleur_fond))
 
-    # Dessiner le phantôme de la tour si on est en mode placement et que phantom_tower est défini
+def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower):
+    window.fill(BACKGROUND_COLOR)
+
     if placing_tower and phantom_tower:
-        phantom_tower.draw_phantom(fenetre)
+        phantom_tower.draw_phantom(window)
 
-    # Calculer le temps écoulé en secondes et afficher le timer
-    temps_ecoule = pygame.time.get_ticks() // 1000
-    minutes = temps_ecoule // 60
-    secondes = temps_ecoule % 60
-    timer = f'{minutes:02}:{secondes:02}'
-    toolbar.draw(fenetre, vie=100, argent=500, timer=timer, vague=1)
+    elapsed_time = pygame.time.get_ticks() // 1000
+    minutes = elapsed_time // 60
+    seconds = elapsed_time % 60
+    timer = f'{minutes:02}:{seconds:02}'
+    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=1)
 
-    # Dessiner les mobs
     for mob in mobs:
         if mob.active:
-            mob.move()
-            if mob.rect.x < largeur_zone_jeu:
-                mob.draw(fenetre)
+            reached_end = mob.move()
+            if mob.rect.x < GAME_AREA_WIDTH:
+                mob.draw(window)
+                if reached_end:
+                    hp = mob.attack(hp)
             else:
-                mob.active = False  # Désactiver les mobs en dehors de la zone de jeu
+                mob.active = False
+    mobs[:] = [mob for mob in mobs if mob.active]
 
-    # Supprimer les mobs inactifs
-    mobs = [mob for mob in mobs if mob.active]
-
-    # Dessiner les tours placées
     for tower in towers:
-        tower.draw(fenetre)
+        tower.draw(window)
 
-    # Dessiner la toolbar par-dessus tout
-    toolbar.draw(fenetre, vie=100, argent=500, timer=timer, vague=1)
+    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=1)
 
-    tick_clock.tick(tick)
+    return hp
 
-    # Mettre à jour l'affichage
-    pygame.display.flip()
-    clock.tick(fps)
 
-pygame.quit()
-sys.exit()
+def main():
+    window = init_window()
+    clock = pygame.time.Clock()
+    tick_clock = pygame.time.Clock()
+
+    mobs = create_mobs()
+    towers = []
+    toolbar = Toolbar.Toolbar(WIDTH, HEIGHT)
+    placing_tower = False
+    phantom_tower = None
+
+    hp = 100
+    running = True
+
+    while running:
+        running, placing_tower, phantom_tower = handle_events(mobs, toolbar, placing_tower, phantom_tower, towers)
+        hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower)
+        tick_clock.tick(TICK)
+        pygame.display.flip()
+        clock.tick(FPS)
+
+    pygame.quit()
+    sys.exit()
+
+
+if __name__ == "__main__":
+    main()
