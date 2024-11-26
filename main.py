@@ -3,6 +3,7 @@ import sys
 import Mobs
 import Towers
 import Toolbar
+import random
 
 # Initialisation de Pygame
 pygame.init()
@@ -23,19 +24,36 @@ PATH = [
 ]
 
 
+# vague
+WAVE = 0
+tab_timer = []
+change_wave = True
+
+
 def init_window():
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Open TDD")
     return window
 
+def create_wave(wave_nb):
+    nb_max_mobs = wave_nb // 2 + 1
+    mob_wave = []
+    for i in range(nb_max_mobs):
+        if mob_wave==[]: mob_wave.append(("Soldier",0.1))
+        if wave_nb>10 and random()>=0.7:
+            mob_wave.append(("Tank",random.uniform()))
+        if wave_nb>7 and random()>0.6:
+            mob_wave.append(("Sergant",random.uniform()))
+        if wave_nb>5 and random()>0.4:
+            mob_wave.append(("Capitain",random.uniform()))
+        else:
+            mob_wave.append(("Soldier",random.uniform()))
 
-def create_mobs():
-    return [
-        Mobs.Mob(PATH, 'Tank'),
-        Mobs.Mob(PATH, 'Sergeant'),
-        Mobs.Mob(PATH, 'Tank'),
-        Mobs.Mob(PATH, 'Boss')
-    ]
+    return mob_wave
+
+def spawn_mobs(mob_wave,current_wave_time,mobs):
+
+    pass
 
 
 def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
@@ -62,6 +80,26 @@ def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
         elif event.type == pygame.MOUSEMOTION and placing_tower:
             x, y = event.pos
             phantom_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
+    '''
+    new = False
+    
+    seconds=time_game()[1]
+    if seconds > 0:
+        change_wave = True
+    if change_wave == True and seconds == 0:  # pour l'instant on va dire qu'on change de vague toutes les minutes
+        VAGUE += 1
+        change_wave = False
+        for t in range(nb_max_mobs + 1):
+            tab_timer.append(randint(0, 59))
+            new = True
+    # tri de la liste:
+    if new:
+        for i in range(len(tab_timer)):
+            for j in range(i, len(tab_timer)):
+                tab_timer[i], tab_timer[j] = min(tab_timer[i], tab_timer[j]), max(tab_timer[i], tab_timer[j])
+        new = False'''
+
+
     return True, placing_tower, phantom_tower
 
 
@@ -100,8 +138,9 @@ def main():
     window = init_window()
     clock = pygame.time.Clock()
     tick_clock = pygame.time.Clock()
-
-    mobs = create_mobs()
+    wave=1
+    mobs=spawn_mobs(0,0,0)
+    waves = create_wave(WAVE)
     towers = []
     toolbar = Toolbar.Toolbar(WIDTH, HEIGHT)
     placing_tower = False
