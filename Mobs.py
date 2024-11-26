@@ -2,7 +2,7 @@ import pygame
 
 class Mob:
     MOB_PROPERTIES = {
-        'Soldier': {'health': 50, 'absorb': 0, 'damage': 10, 'speed': 20, 'size': (20, 20), 'color': (255, 0, 0)},
+        'Soldier': {'health': 50, 'absorb': 0, 'damage': 10, 'speed': 25, 'size': (20, 20), 'color': (255, 0, 0)},
         'Captain': {'health': 100, 'absorb': 2, 'damage': 25, 'speed': 35, 'size': (25, 25), 'color': (255, 255, 0)},
         'Sergeant': {'health': 150, 'absorb': 3, 'damage': 35, 'speed': 35, 'size': (30, 30), 'color': (0, 255, 0)},
         'Tank': {'health': 500, 'absorb': 7, 'damage': 50, 'speed': 10, 'size': (60, 40), 'color': (128, 128, 128)},
@@ -37,10 +37,21 @@ class Mob:
             target = self.path[self.path_index + 1]
             dx, dy = target[0] - self.rect.x, target[1] - self.rect.y
             dist = (dx**2 + dy**2)**0.5
+            move_dist = min(self.speed, dist) #pour éviter qu'il dépasse le point cible et qu'il se bloque
             if dist <= 5:
                 self.path_index += 1
+                return False
             else:
-                self.rect.x += self.speed * dx / dist
-                self.rect.y += self.speed * dy / dist
+                self.rect.x += move_dist * dx / dist
+                self.rect.y += move_dist * dy / dist
+                return False
+
         else:
             self.delete()
+            return True
+
+    def attack(self, health):
+       return health - self.damage
+
+
+

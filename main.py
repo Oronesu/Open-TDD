@@ -40,6 +40,10 @@ path = [
 
 # Créer les objets
 mobs = [Mobs.Mob(path, 'Tank')]
+#mobs = mobs + [Mobs.Mob(path, 'Captain')]
+#mobs = mobs + [Mobs.Mob(path, 'Sergeant')]
+#mobs = mobs + [Mobs.Mob(path, 'Tank')]
+#mobs = mobs + [Mobs.Mob(path, 'Boss')]
 towers = []
 
 # Instancier la barre d'outils
@@ -49,13 +53,22 @@ toolbar = Toolbar.Toolbar(largeur, hauteur)
 placing_tower = False
 phantom_tower = None
 
+hp = 100
+dmg = False
+
 # Boucle principale
 running = True
 while running:
     # Gérer les événements
     for event in pygame.event.get():
+        keys = pygame.key.get_pressed()
         if event.type == pygame.QUIT:
             running = False
+        if mobs != []:
+            if keys[pygame.K_DOWN]:
+                mobs[0].speed = mobs[0].speed - 1
+            if keys[pygame.K_UP]:
+                mobs[0].speed = mobs[0].speed +  1
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
             if toolbar.is_button_clicked(event.pos):
@@ -72,6 +85,7 @@ while running:
             x, y = event.pos
             phantom_tower = Tours.Tour(x, y, 25, 100, (0, 0, 255))
 
+
     # Remplir la fenêtre avec la couleur de fond
     fenetre.fill(tuple(couleur_fond))
 
@@ -84,16 +98,22 @@ while running:
     minutes = temps_ecoule // 60
     secondes = temps_ecoule % 60
     timer = f'{minutes:02}:{secondes:02}'
-    toolbar.draw(fenetre, vie=100, argent=500, timer=timer, vague=1)
+    toolbar.draw(fenetre, vie=hp, argent=500, timer=timer, vague=1)
 
     # Dessiner les mobs
+
+
+                
     for mob in mobs:
-        if mob.active:
-            mob.move()
-            if mob.rect.x < largeur_zone_jeu:
-                mob.draw(fenetre)
-            else:
-                mob.active = False  # Désactiver les mobs en dehors de la zone de jeu
+      if mob.active:
+        reached_end=mob.move()
+        if mob.rect.x < largeur_zone_jeu:
+          mob.draw(fenetre)
+          if reached_end:
+            hp = mob.attack(hp)
+            reached_end = False
+        else:
+          mob.active = False #désactiver les bos en dehors de la zone de jeu
 
     # Supprimer les mobs inactifs
     mobs = [mob for mob in mobs if mob.active]

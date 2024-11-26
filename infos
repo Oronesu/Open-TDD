@@ -24,7 +24,7 @@ Mobs:
         vie = 500
         defense = 0,7
         speed = 10
-        taille = 35*20z
+        taille = 35*20
         couleur = gris (128,128,128)
         dégâts = 50
     Chef des armées:
