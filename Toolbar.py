@@ -15,7 +15,7 @@ class Toolbar:
             for i in range(4)
         ]
 
-    def draw(self, fenetre, vie, argent, timer, vague):
+    def draw(self, fenetre, hp, money, timer, wave):
         # Dessiner la barre d'outils
         pygame.draw.rect(fenetre, self.color, (self.window_width - self.width, 0, self.width, self.height))
 
@@ -25,13 +25,13 @@ class Toolbar:
 
         # Afficher la vie du joueur, l'argent, le timer et la vague
         font = pygame.font.SysFont(None, 36)
-        texte_vie = font.render(f'Vie: {vie}', True, (255, 255, 255))
+        texte_vie = font.render(f'Vie: {hp}', True, (255, 255, 255))
         fenetre.blit(texte_vie, (self.window_width - self.width + 10, 10))
-        texte_argent = font.render(f'Argent: {argent}', True, (255, 255, 255))
+        texte_argent = font.render(f'Argent: {money}', True, (255, 255, 255))
         fenetre.blit(texte_argent, (self.window_width - self.width + 10, 50))
         texte_timer = font.render(f'Timer: {timer}', True, (255, 255, 255))
         fenetre.blit(texte_timer, (self.window_width - self.width + 10, 90))
-        texte_vague = font.render(f'Vague: {vague}', True, (255, 255, 255))
+        texte_vague = font.render(f'Vague: {wave}', True, (255, 255, 255))
         fenetre.blit(texte_vague, (self.window_width - self.width + 10, 130))
 
     def is_button_clicked(self, pos):
