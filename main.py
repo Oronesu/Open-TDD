@@ -15,6 +15,9 @@ hauteur = 768   # Hauteur augmentée pour maintenir le ratio 4:3
 fenetre = pygame.display.set_mode((largeur, hauteur))
 pygame.display.set_caption("Ma Fenêtre Pygame")
 
+# Définir la largeur de la zone de jeu (en dehors de la toolbar)
+largeur_zone_jeu = largeur - 224  # Par exemple, la toolbar prend les derniers 100 pixels
+
 # Clock pour gérer les FPS
 clock = pygame.time.Clock()
 fps = 60
@@ -24,7 +27,7 @@ tick_clock = pygame.time.Clock()
 tick = 20
 
 # Couleur de fond (RGB)
-couleur_fond = [0, 0, 0]
+couleur_fond = [64, 68, 29]
 
 # Chemin
 path = [
@@ -46,8 +49,9 @@ towers = []
 # Instancier la barre d'outils
 toolbar = Toolbar.Toolbar(largeur, hauteur)
 
-# Etat de placement
-placing_tower = None
+# Etat de placement et tour fantôme
+placing_tower = False
+phantom_tower = None
 
 hp = 100
 dmg = False
@@ -55,6 +59,7 @@ dmg = False
 # Boucle principale
 running = True
 while running:
+    # Gérer les événements
     for event in pygame.event.get():
         keys = pygame.key.get_pressed()
         if event.type == pygame.QUIT:
@@ -68,17 +73,25 @@ while running:
             x, y = event.pos
             if toolbar.is_button_clicked(event.pos):
                 placing_tower = True
+                phantom_tower = Tours.Tour(x, y, 25, 100, (0, 0, 255))  # Initialiser la tour fantôme
             elif placing_tower:
-                towers.append(Tours.Tour(x, y, 25, 100, (0, 0, 255)))
+                new_tower = Tours.Tour(x, y, 25, 100, (0, 0, 255))
+                if new_tower.is_within_bounds(largeur, largeur_zone_jeu):
+                    towers.append(new_tower)
                 placing_tower = False
+                phantom_tower = None  # Réinitialiser la tour fantôme
 
+        elif event.type == pygame.MOUSEMOTION and placing_tower:
+            x, y = event.pos
+            phantom_tower = Tours.Tour(x, y, 25, 100, (0, 0, 255))
 
-
-    #if keys[pygame.K_DOWN]:
-    #    couleur_fond[0] = (couleur_fond[0] + 1) % 256
 
     # Remplir la fenêtre avec la couleur de fond
-    fenetre.fill(tuple(couleur_fond))  # Utiliser tuple ici
+    fenetre.fill(tuple(couleur_fond))
+
+    # Dessiner le phantôme de la tour si on est en mode placement et que phantom_tower est défini
+    if placing_tower and phantom_tower:
+        phantom_tower.draw_phantom(fenetre)
 
     # Calculer le temps écoulé en secondes et afficher le timer
     temps_ecoule = pygame.time.get_ticks() // 1000
@@ -88,26 +101,34 @@ while running:
     toolbar.draw(fenetre, vie=hp, argent=500, timer=timer, vague=1)
 
     # Dessiner les mobs
-    if mobs != []:
-        for mob in mobs:
-            if mob.active:
-                mob.draw(fenetre)
-                reached_end = mob.move()
-                if reached_end:
-                    hp =  mob.attack(hp)
-                    reached_end = False
+
+
+                
+    for mob in mobs:
+      if mob.active:
+        reached_end=mob.move()
+        if mob.rect.x < largeur_zone_jeu:
+          mob.draw(fenetre)
+          if reached_end:
+            hp = mob.attack(hp)
+            reached_end = False
+        else:
+          mob.active = False #désactiver les bos en dehors de la zone de jeu
+
     # Supprimer les mobs inactifs
     mobs = [mob for mob in mobs if mob.active]
 
-    # Dessiner les tours placés
+    # Dessiner les tours placées
     for tower in towers:
         tower.draw(fenetre)
+
+    # Dessiner la toolbar par-dessus tout
+    toolbar.draw(fenetre, vie=100, argent=500, timer=timer, vague=1)
 
     tick_clock.tick(tick)
 
     # Mettre à jour l'affichage
     pygame.display.flip()
-
     clock.tick(fps)
 
 pygame.quit()
