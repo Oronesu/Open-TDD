@@ -39,29 +39,27 @@ def create_mobs():
 
 
 def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
+    selected_tower = None
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False, placing_tower, phantom_tower
 
-        keys = pygame.key.get_pressed()
-        if mobs and (event.type == pygame.KEYDOWN and keys[pygame.K_DOWN]):
-            mobs[0].speed -= 1
-        elif mobs and (event.type == pygame.KEYDOWN and keys[pygame.K_UP]):
-            mobs[0].speed += 1
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
-            if toolbar.is_button_clicked(event.pos):
+            selected_tower = toolbar.is_button_clicked(event.pos)
+            if selected_tower:
                 placing_tower = True
-                phantom_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
+                phantom_tower = Towers.Tower(x, y, selected_tower)
             elif placing_tower:
-                new_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
+                new_tower = Towers.Tower(x, y, phantom_tower.category)
                 if new_tower.is_within_bounds(WIDTH, GAME_AREA_WIDTH):
                     towers.append(new_tower)
                 placing_tower = False
                 phantom_tower = None
         elif event.type == pygame.MOUSEMOTION and placing_tower:
             x, y = event.pos
-            phantom_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
+            phantom_tower = Towers.Tower(x, y, phantom_tower.category)
+
     return True, placing_tower, phantom_tower
 
 
@@ -80,16 +78,20 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_towe
     for mob in mobs:
         if mob.active:
             reached_end = mob.move()
-            if mob.rect.x < GAME_AREA_WIDTH:
-                mob.draw(window)
-                if reached_end:
-                    hp = mob.attack(hp)
+            if reached_end:
+                hp = mob.attack(hp)
             else:
-                mob.active = False
-    mobs[:] = [mob for mob in mobs if mob.active]
+                mob.draw(window)
+        else:
+            mobs.remove(mob)  # Supprimer les mobs inactifs de la liste
 
     for tower in towers:
         tower.draw(window)
+        mobs_in_range = tower.in_range(mobs)
+        mob_cible = tower.first_in_range(mobs_in_range)
+        if mob_cible:
+            tower.attack_mob(mob_cible)
+        tower.update_cooldown()
 
     toolbar.draw(window, hp=hp, money=500, timer=timer, wave=1)
 
@@ -113,6 +115,7 @@ def main():
     while running:
         running, placing_tower, phantom_tower = handle_events(mobs, toolbar, placing_tower, phantom_tower, towers)
         hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower)
+
         tick_clock.tick(TICK)
         pygame.display.flip()
         clock.tick(FPS)
