@@ -1,9 +1,9 @@
 import pygame
 import sys
+import random
 import Mobs
 import Towers
 import Toolbar
-import random
 
 # Initialisation de Pygame
 pygame.init()
@@ -23,87 +23,46 @@ PATH = [
     (700, 400), (750, 400), (800, 400)
 ]
 
-
-# vague
-WAVE = 0
-tab_timer = []
-change_wave = True
-
+MOB_TYPES = ['Soldier', 'Captain', 'Sergeant', 'Tank', 'Boss']
 
 def init_window():
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Open TDD")
     return window
 
-def create_wave(wave_nb):
-    nb_max_mobs = wave_nb // 2 + 1
-    mob_wave = []
-    for i in range(nb_max_mobs):
-        if mob_wave==[]: mob_wave.append(("Soldier",0.1))
-        if wave_nb>10 and random()>=0.7:
-            mob_wave.append(("Tank",random.uniform()))
-        if wave_nb>7 and random()>0.6:
-            mob_wave.append(("Sergant",random.uniform()))
-        if wave_nb>5 and random()>0.4:
-            mob_wave.append(("Capitain",random.uniform()))
-        else:
-            mob_wave.append(("Soldier",random.uniform()))
-
-    return mob_wave
-
-def spawn_mobs(mob_wave,current_wave_time,mobs):
-
-    pass
-
+def create_wave(wave_number):
+    number_of_mobs = 5 * wave_number
+    wave_mobs = []
+    for _ in range(number_of_mobs):
+        mob_type = random.choices(MOB_TYPES, weights=[1, 1, 1, wave_number, wave_number])[0]
+        wave_mobs.append(Mobs.Mob(PATH, mob_type))
+    return wave_mobs
 
 def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
+    selected_tower = None
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False, placing_tower, phantom_tower
 
-        keys = pygame.key.get_pressed()
-        if mobs and (event.type == pygame.KEYDOWN and keys[pygame.K_DOWN]):
-            mobs[0].speed -= 1
-        elif mobs and (event.type == pygame.KEYDOWN and keys[pygame.K_UP]):
-            mobs[0].speed += 1
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
-            if toolbar.is_button_clicked(event.pos):
+            selected_tower = toolbar.is_button_clicked(event.pos)
+            if selected_tower:
                 placing_tower = True
-                phantom_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
+                phantom_tower = Towers.Tower(x, y, selected_tower)
             elif placing_tower:
-                new_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
+                new_tower = Towers.Tower(x, y, phantom_tower.category)
                 if new_tower.is_within_bounds(WIDTH, GAME_AREA_WIDTH):
                     towers.append(new_tower)
                 placing_tower = False
                 phantom_tower = None
         elif event.type == pygame.MOUSEMOTION and placing_tower:
             x, y = event.pos
-            phantom_tower = Towers.Tower(x, y, 25, 100, (0, 0, 255))
-    '''
-    new = False
-    
-    seconds=time_game()[1]
-    if seconds > 0:
-        change_wave = True
-    if change_wave == True and seconds == 0:  # pour l'instant on va dire qu'on change de vague toutes les minutes
-        VAGUE += 1
-        change_wave = False
-        for t in range(nb_max_mobs + 1):
-            tab_timer.append(randint(0, 59))
-            new = True
-    # tri de la liste:
-    if new:
-        for i in range(len(tab_timer)):
-            for j in range(i, len(tab_timer)):
-                tab_timer[i], tab_timer[j] = min(tab_timer[i], tab_timer[j]), max(tab_timer[i], tab_timer[j])
-        new = False'''
-
+            phantom_tower = Towers.Tower(x, y, phantom_tower.category)
 
     return True, placing_tower, phantom_tower
 
-
-def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower):
+def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave):
     window.fill(BACKGROUND_COLOR)
 
     if placing_tower and phantom_tower:
@@ -113,34 +72,36 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_towe
     minutes = elapsed_time // 60
     seconds = elapsed_time % 60
     timer = f'{minutes:02}:{seconds:02}'
-    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=1)
+    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=wave)
 
     for mob in mobs:
         if mob.active:
             reached_end = mob.move()
-            if mob.rect.x < GAME_AREA_WIDTH:
-                mob.draw(window)
-                if reached_end:
-                    hp = mob.attack(hp)
+            if reached_end:
+                hp = mob.attack(hp)
             else:
-                mob.active = False
-    mobs[:] = [mob for mob in mobs if mob.active]
+                mob.draw(window)
+        else:
+            mobs.remove(mob)  # Supprimer les mobs inactifs de la liste
 
     for tower in towers:
         tower.draw(window)
+        mobs_in_range = tower.in_range(mobs)
+        mob_cible = tower.first_in_range(mobs_in_range)
+        if mob_cible:
+            tower.attack_mob(mob_cible)
+        tower.update_cooldown()
 
-    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=1)
+    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=wave)
 
     return hp
-
 
 def main():
     window = init_window()
     clock = pygame.time.Clock()
     tick_clock = pygame.time.Clock()
-    wave=1
-    mobs=spawn_mobs(0,0,0)
-    waves = create_wave(WAVE)
+
+    mobs = []
     towers = []
     toolbar = Toolbar.Toolbar(WIDTH, HEIGHT)
     placing_tower = False
@@ -148,10 +109,21 @@ def main():
 
     hp = 100
     running = True
+    wave = 1
+    next_mob_time = pygame.time.get_ticks()
+
+    mobs=create_wave(wave)
 
     while running:
         running, placing_tower, phantom_tower = handle_events(mobs, toolbar, placing_tower, phantom_tower, towers)
-        hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower)
+        hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave)
+
+        current_time = pygame.time.get_ticks()
+        if not any(mob.active for mob in mobs) and next_mob_time <= current_time:
+            wave += 1
+            mobs=create_wave(wave)
+            next_mob_time = current_time + random.randint(1000, 3500)
+
         tick_clock.tick(TICK)
         pygame.display.flip()
         clock.tick(FPS)
@@ -162,3 +134,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
