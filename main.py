@@ -62,6 +62,7 @@ def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
 
     return True, placing_tower, phantom_tower
 
+
 def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave):
     window.fill(BACKGROUND_COLOR)
 
@@ -116,6 +117,7 @@ def main():
 
     while running:
         running, placing_tower, phantom_tower = handle_events(mobs, toolbar, placing_tower, phantom_tower, towers)
+
         hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave)
 
         current_time = pygame.time.get_ticks()
