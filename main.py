@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 import Mobs
 import Towers
 import Toolbar
@@ -22,21 +23,20 @@ PATH = [
     (700, 400), (750, 400), (800, 400)
 ]
 
+MOB_TYPES = ['Soldier', 'Captain', 'Sergeant', 'Tank', 'Boss']
 
 def init_window():
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Open TDD")
     return window
 
-
-def create_mobs():
-    return [
-        Mobs.Mob(PATH, 'Tank'),
-        Mobs.Mob(PATH, 'Sergeant'),
-        Mobs.Mob(PATH, 'Tank'),
-        Mobs.Mob(PATH, 'Boss')
-    ]
-
+def create_wave(wave_number):
+    number_of_mobs = 5 * wave_number
+    wave_mobs = []
+    for _ in range(number_of_mobs):
+        mob_type = random.choices(MOB_TYPES, weights=[1, 1, 1, wave_number, wave_number])[0]
+        wave_mobs.append(Mobs.Mob(PATH, mob_type))
+    return wave_mobs
 
 def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
     selected_tower = None
@@ -63,7 +63,7 @@ def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
     return True, placing_tower, phantom_tower
 
 
-def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower):
+def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave):
     window.fill(BACKGROUND_COLOR)
 
     if placing_tower and phantom_tower:
@@ -73,7 +73,7 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_towe
     minutes = elapsed_time // 60
     seconds = elapsed_time % 60
     timer = f'{minutes:02}:{seconds:02}'
-    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=1)
+    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=wave)
 
     for mob in mobs:
         if mob.active:
@@ -93,17 +93,16 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_towe
             tower.attack_mob(mob_cible)
         tower.update_cooldown()
 
-    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=1)
+    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=wave)
 
     return hp
-
 
 def main():
     window = init_window()
     clock = pygame.time.Clock()
     tick_clock = pygame.time.Clock()
 
-    mobs = create_mobs()
+    mobs = []
     towers = []
     toolbar = Toolbar.Toolbar(WIDTH, HEIGHT)
     placing_tower = False
@@ -111,10 +110,21 @@ def main():
 
     hp = 100
     running = True
+    wave = 1
+    next_mob_time = pygame.time.get_ticks()
+
+    mobs=create_wave(wave)
 
     while running:
         running, placing_tower, phantom_tower = handle_events(mobs, toolbar, placing_tower, phantom_tower, towers)
-        hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower)
+
+        hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave)
+
+        current_time = pygame.time.get_ticks()
+        if not any(mob.active for mob in mobs) and next_mob_time <= current_time:
+            wave += 1
+            mobs=create_wave(wave)
+            next_mob_time = current_time + random.randint(1000, 3500)
 
         tick_clock.tick(TICK)
         pygame.display.flip()
@@ -126,3 +136,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
