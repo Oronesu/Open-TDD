@@ -52,7 +52,16 @@ class Mob:
             self.delete()
             return True
 
+
+#Darren
     def dist_travelled(self):
+        '''
+        Calcule la distance parcourue sur le chemin
+        Appelé par Tours pour trouver le mob le plus avancé sur le chemin
+        :return:
+        (int) dist_pacourue -> distance parcourue sur le chemin
+        '''
+
         # Si le mob est au début du chemin, la distance est nulle
         if self.path_index == 0:
             return 0
@@ -70,5 +79,6 @@ class Mob:
 
             # Retourner la distance totale parcourue
             return dist_parcourue
+
     def attack(self, health):
         return health - self.damage

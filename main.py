@@ -5,6 +5,8 @@ import Mobs
 import Towers
 import Toolbar
 
+
+'''---------------------Constantes----------------------'''
 # Initialisation de Pygame
 pygame.init()
 
@@ -31,6 +33,9 @@ def init_window():
     pygame.display.set_caption("Open TDD")
     return window
 
+
+'''---------------------Création des vagues----------------------'''
+#Alan
 def create_wave(wave_number):
     number_of_mobs = 5 * wave_number
     wave_mobs = []
@@ -39,7 +44,17 @@ def create_wave(wave_number):
         wave_mobs.append(Mobs.Mob(PATH, mob_type))
     return wave_mobs
 
-def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers,):
+
+def update_wave(mobs, wave_mobs, next_mob_time, current_time):
+    if wave_mobs and next_mob_time <= current_time:
+        mobs.append(wave_mobs.pop(0))
+        next_mob_time = current_time + random.randint(200, 1500)  # Délai entre 0.2s et 1.5s
+    return next_mob_time
+
+
+'''---------------------Inputs Utilisateur----------------------'''
+#Darren et/ou Alan
+def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
     selected_tower = None
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -64,7 +79,10 @@ def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers,):
     return True, placing_tower, phantom_tower
 
 
-def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placing_tower, wave):
+
+'''---------------------Affichage des éléments----------------------'''
+#Darren et Alan
+def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave):
     window.fill(BACKGROUND_COLOR)
 
     if placing_tower and phantom_tower:
@@ -103,6 +121,8 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placin
 
     return hp,money
 
+
+'''---------------------Boucle du jeu----------------------'''
 def main():
     window = init_window()
     clock = pygame.time.Clock()
@@ -118,21 +138,22 @@ def main():
     money = 50
     running = True
     wave = 1
-    next_mob_time = pygame.time.get_ticks()
 
+    next_mob_time = pygame.time.get_ticks()
     mobs=create_wave(wave)
 
     while running:
         running, placing_tower, phantom_tower = handle_events(mobs, toolbar, placing_tower, phantom_tower, towers)
-
-        hp, money = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placing_tower, wave)
+        hp, money = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, money, placing_tower, wave)
 
         current_time = pygame.time.get_ticks()
+        next_mob_time = update_wave(mobs, wave_mobs, next_mob_time, current_time)
+        
         if not any(mob.active for mob in mobs) and next_mob_time <= current_time:
             wave += 1
             money += wave*(5%21)
-            mobs=create_wave(wave)
-            next_mob_time = current_time + random.randint(1000, 3500)
+            wave_mobs=create_wave(wave)
+
 
         tick_clock.tick(TICK)
         pygame.display.flip()
@@ -140,7 +161,6 @@ def main():
 
     pygame.quit()
     sys.exit()
-
 
 if __name__ == "__main__":
     main()
