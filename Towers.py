@@ -5,10 +5,10 @@ TICKS_PER_SECOND = 60
 
 class Tower:
     TOWER_PROPERTIES = {
-        'Sniper': {'dmg': 25, 'attack_speed': 2, 'range': 200, 'size': (45, 45), 'color': (255, 0, 0)},
-        'Lance-flammes': {'dmg': 20, 'attack_speed': 5, 'range': 100, 'size': (45, 45), 'color': (255, 255, 0)},
-        'Mortier': {'dmg': 100, 'attack_speed': 0.8, 'range': 100, 'size': (45, 45), 'color': (0, 255, 0)},
-        'Minigun': {'dmg': 20, 'attack_speed': 10, 'range': 100, 'size': (45, 45), 'color': (238, 130, 238)}
+        'Sniper': {'dmg': 25, 'attack_speed': 2, 'prix' : 50, 'range': 50, 'isPlaced' : False, 'size': (45, 45), 'color': (255, 0, 0)},
+        'Lance-flammes': {'dmg': 20, 'attack_speed': 5,  'prix' : 50, 'range': 50, 'isPlaced' : False, 'size': (45, 45), 'color': (255, 255, 0)},
+        'Mortier': {'dmg': 100, 'attack_speed': 0.8, 'prix' : 50, 'range': 50, 'isPlaced' : False, 'size': (45, 45), 'color': (0, 255, 0)},
+        'Minigun': {'dmg': 20, 'attack_speed': 10, 'prix' : 50, 'range': 50, 'isPlaced' : False, 'size': (45, 45), 'color': (238, 130, 238)}
     }
 
     def __init__(self, x, y, category):
@@ -16,10 +16,12 @@ class Tower:
         properties = self.TOWER_PROPERTIES.get(category)
         self.dmg = properties['dmg']
         self.atk_spd = properties['attack_speed']
+        self.prix = properties['prix']
         width, height = properties['size']
         self.rect = pygame.Rect(x, y, width, height)
         self.color = properties['color']
         self.range = properties['range']
+        self.isPlaced = properties['isPlaced']
         self.attack_cooldown = 0
 
         # Convertir attack_speed (attaques par seconde) en nombre de ticks entre les attaques
@@ -60,12 +62,13 @@ class Tower:
             return None
         return max(mobs_in_range, key=lambda mob: mob.dist_travelled())
 
-    def attack_mob(self, mob):
+    def attack_mob(self, mob, money):
         if self.attack_cooldown <= 0:
             mob.health -= self.dmg
             print(mob.health)
             self.attack_cooldown = self.cooldown_time  # Réinitialiser le cooldown d'attaque
             if mob.health <= 0:
+                money += mob.reward
                 mob.delete()  # Supprimer le mob si sa vie est <= 0
             else:
                 # Créer un projectile vers le mob
@@ -73,6 +76,9 @@ class Tower:
                 target_pos = (mob.rect.centerx, mob.rect.centery)
                 bullet = Bullet.Bullet(start_pos, target_pos, self.dmg, 50)
                 self.bullets.append(bullet)
+
+        return money
+
 
     def update_cooldown(self):
         if self.attack_cooldown > 0:
