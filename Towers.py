@@ -5,10 +5,10 @@ TICKS_PER_SECOND = 60
 
 class Tower:
     TOWER_PROPERTIES = {
-        'Sniper': {'dmg': 25, 'attack_speed': 2, 'prix' : 50, 'range': 50, 'isPlaced' : False, 'size': (45, 45), 'color': (255, 0, 0)},
-        'Lance-flammes': {'dmg': 20, 'attack_speed': 5,  'prix' : 50, 'range': 50, 'isPlaced' : False, 'size': (45, 45), 'color': (255, 255, 0)},
-        'Mortier': {'dmg': 100, 'attack_speed': 0.8, 'prix' : 50, 'range': 50, 'isPlaced' : False, 'size': (45, 45), 'color': (0, 255, 0)},
-        'Minigun': {'dmg': 20, 'attack_speed': 10, 'prix' : 50, 'range': 50, 'isPlaced' : False, 'size': (45, 45), 'color': (238, 130, 238)}
+        'Sniper': {'dmg': 25, 'attack_speed': 2, 'prix' : 50, 'range': 200, 'isPlaced': False, 'size': (45, 45), 'color': (255, 0, 0)},
+        'Lance-flammes': {'dmg': 20, 'attack_speed': 5,  'prix' : 50, 'range': 100, 'isPlaced': False, 'size': (45, 45), 'color': (255, 255, 0)},
+        'Mortier': {'dmg': 200, 'attack_speed': 0.1, 'prix' : 50, 'range': 500, 'isPlaced': False, 'size': (45, 45), 'color': (0, 255, 0)},
+        'Minigun': {'dmg': 20, 'attack_speed': 10, 'prix' : 50, 'range': 100, 'isPlaced': False, 'size': (45, 45), 'color': (238, 130, 238)}
     }
 
     def __init__(self, x, y, category):
@@ -74,7 +74,7 @@ class Tower:
                 # Créer un projectile vers le mob
                 start_pos = (self.rect.centerx, self.rect.centery)
                 target_pos = (mob.rect.centerx, mob.rect.centery)
-                bullet = Bullet.Bullet(start_pos, target_pos, self.dmg, 50)
+                bullet = Bullet.Bullet(start_pos, target_pos, self.dmg, 40)
                 self.bullets.append(bullet)
 
         return money
