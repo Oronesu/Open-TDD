@@ -3,11 +3,11 @@ import pygame
 
 class Mob:
     MOB_PROPERTIES = {
-        'Soldier': {'health': 50, 'absorb': 0, 'damage': 10, 'speed': 5, 'size': (20, 20), 'color': (255, 0, 0)},
-        'Captain': {'health': 100, 'absorb': 2, 'damage': 25, 'speed': 5, 'size': (25, 25), 'color': (255, 255, 0)},
-        'Sergeant': {'health': 150, 'absorb': 3, 'damage': 35, 'speed': 5, 'size': (30, 30), 'color': (0, 255, 0)},
-        'Tank': {'health': 500, 'absorb': 7, 'damage': 50, 'speed': 1, 'size': (60, 40), 'color': (128, 128, 128)},
-        'Boss': {'health': 300, 'absorb': 5, 'damage': 40, 'speed': 2, 'size': (35, 35), 'color': (238, 130, 238)}
+        'Soldier': {'health': 50, 'absorb': 0, 'damage': 10, 'reward' : 5, 'speed': 5, 'size': (20, 20), 'color': (255, 0, 0)},
+        'Captain': {'health': 100, 'absorb': 2, 'damage': 25, 'reward' : 10, 'speed': 5, 'size': (25, 25), 'color': (255, 255, 0)},
+        'Sergeant': {'health': 150, 'absorb': 3, 'damage': 35, 'reward' : 20, 'speed': 5, 'size': (30, 30), 'color': (0, 255, 0)},
+        'Tank': {'health': 500, 'absorb': 7, 'damage': 50, 'reward' : 40, 'speed': 1, 'size': (60, 40), 'color': (128, 128, 128)},
+        'Boss': {'health': 300, 'absorb': 5, 'damage': 40, 'reward' : 60, 'speed': 2, 'size': (35, 35), 'color': (238, 130, 238)}
     }
 
     def __init__(self, path, category):
@@ -18,6 +18,7 @@ class Mob:
         self.health = properties.get('health', 0)
         self.absorb = properties.get('absorb', 0)
         self.damage = properties.get('damage', 0)
+        self.reward = properties.get('reward', 0)
         self.speed = properties.get('speed', 0)
         width, height = properties.get('size', (15, 15))
         self.rect = pygame.Rect(path[0][0], path[0][1], width, height)

@@ -14,6 +14,7 @@ HEIGHT = 768
 GAME_AREA_WIDTH = WIDTH - 224
 FPS = 60
 TICK = 30
+MONEY = 500
 BACKGROUND_COLOR = (64, 68, 29)
 PATH = [
     (0, 100), (50, 100), (100, 100), (150, 100), (200, 100),
@@ -38,7 +39,7 @@ def create_wave(wave_number):
         wave_mobs.append(Mobs.Mob(PATH, mob_type))
     return wave_mobs
 
-def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
+def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers,):
     selected_tower = None
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -63,7 +64,7 @@ def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
     return True, placing_tower, phantom_tower
 
 
-def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave):
+def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placing_tower, wave):
     window.fill(BACKGROUND_COLOR)
 
     if placing_tower and phantom_tower:
@@ -73,7 +74,7 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_towe
     minutes = elapsed_time // 60
     seconds = elapsed_time % 60
     timer = f'{minutes:02}:{seconds:02}'
-    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=wave)
+    toolbar.draw(window, hp=hp, money=money, timer=timer, wave=wave)
 
     for mob in mobs:
         if mob.active:
@@ -86,16 +87,21 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_towe
             mobs.remove(mob)  # Supprimer les mobs inactifs de la liste
 
     for tower in towers:
-        tower.draw(window)
-        mobs_in_range = tower.in_range(mobs)
-        mob_cible = tower.first_in_range(mobs_in_range)
-        if mob_cible:
-            tower.attack_mob(mob_cible)
-        tower.update_cooldown()
+        if not tower.isPlaced:
+            if tower.prix <= money:
+                money -= tower.prix
+                tower.isPlaced = True
+        if tower.isPlaced:
+            tower.draw(window)
+            mobs_in_range = tower.in_range(mobs)
+            mob_cible = tower.first_in_range(mobs_in_range)
+            if mob_cible:
+                money = tower.attack_mob(mob_cible,money)
+            tower.update_cooldown()
+    toolbar.draw(window, hp=hp, money=money, timer=timer, wave=wave)
 
-    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=wave)
 
-    return hp
+    return hp,money
 
 def main():
     window = init_window()
@@ -109,6 +115,7 @@ def main():
     phantom_tower = None
 
     hp = 100
+    money = 50
     running = True
     wave = 1
     next_mob_time = pygame.time.get_ticks()
@@ -118,11 +125,12 @@ def main():
     while running:
         running, placing_tower, phantom_tower = handle_events(mobs, toolbar, placing_tower, phantom_tower, towers)
 
-        hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave)
+        hp, money = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placing_tower, wave)
 
         current_time = pygame.time.get_ticks()
         if not any(mob.active for mob in mobs) and next_mob_time <= current_time:
             wave += 1
+            money += wave*(5%21)
             mobs=create_wave(wave)
             next_mob_time = current_time + random.randint(1000, 3500)
 
