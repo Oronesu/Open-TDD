@@ -1,9 +1,12 @@
 import pygame
 import sys
+import random
 import Mobs
 import Towers
 import Toolbar
 
+
+'''---------------------Constantes----------------------'''
 # Initialisation de Pygame
 pygame.init()
 
@@ -22,22 +25,33 @@ PATH = [
     (700, 400), (750, 400), (800, 400)
 ]
 
+MOB_TYPES = ['Soldier', 'Captain', 'Sergeant', 'Tank', 'Boss']
+
 
 def init_window():
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Open TDD")
     return window
 
+'''---------------------Création des vagues----------------------'''
+#Alan
+def create_wave(wave_number):
+    number_of_mobs = 5 * wave_number
+    wave_mobs = []
+    for _ in range(number_of_mobs):
+        mob_type = random.choices(MOB_TYPES, weights=[1, 1, 1, wave_number, wave_number])[0]
+        wave_mobs.append(Mobs.Mob(PATH, mob_type))
+    return wave_mobs
 
-def create_mobs():
-    return [
-        Mobs.Mob(PATH, 'Tank'),
-        Mobs.Mob(PATH, 'Sergeant'),
-        Mobs.Mob(PATH, 'Tank'),
-        Mobs.Mob(PATH, 'Boss')
-    ]
+def update_wave(mobs, wave_mobs, next_mob_time, current_time):
+    if wave_mobs and next_mob_time <= current_time:
+        mobs.append(wave_mobs.pop(0))
+        next_mob_time = current_time + random.randint(200, 1500)  # Délai entre 0.2s et 1.5s
+    return next_mob_time
 
 
+'''---------------------Inputs Utilisateur----------------------'''
+#Darren et/ou Alan
 def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
     selected_tower = None
     for event in pygame.event.get():
@@ -63,7 +77,9 @@ def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
     return True, placing_tower, phantom_tower
 
 
-def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower):
+'''---------------------Affichage des éléments----------------------'''
+#Darren et Alan
+def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave):
     window.fill(BACKGROUND_COLOR)
 
     if placing_tower and phantom_tower:
@@ -73,7 +89,7 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_towe
     minutes = elapsed_time // 60
     seconds = elapsed_time % 60
     timer = f'{minutes:02}:{seconds:02}'
-    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=1)
+    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=wave)
 
     for mob in mobs:
         if mob.active:
@@ -87,23 +103,25 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_towe
 
     for tower in towers:
         tower.draw(window)
+        tower.update_bullets(mobs)  # Mise à jour des projectiles
         mobs_in_range = tower.in_range(mobs)
         mob_cible = tower.first_in_range(mobs_in_range)
         if mob_cible:
             tower.attack_mob(mob_cible)
         tower.update_cooldown()
 
-    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=1)
+    toolbar.draw(window, hp=hp, money=500, timer=timer, wave=wave)
 
     return hp
 
 
+'''---------------------Boucle du jeu----------------------'''
 def main():
     window = init_window()
     clock = pygame.time.Clock()
     tick_clock = pygame.time.Clock()
 
-    mobs = create_mobs()
+    mobs = []
     towers = []
     toolbar = Toolbar.Toolbar(WIDTH, HEIGHT)
     placing_tower = False
@@ -111,10 +129,20 @@ def main():
 
     hp = 100
     running = True
+    wave = 1
+    wave_mobs = create_wave(wave)
+    next_mob_time = pygame.time.get_ticks()
 
     while running:
         running, placing_tower, phantom_tower = handle_events(mobs, toolbar, placing_tower, phantom_tower, towers)
-        hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower)
+        hp = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, placing_tower, wave)
+
+        current_time = pygame.time.get_ticks()
+        next_mob_time = update_wave(mobs, wave_mobs, next_mob_time, current_time)
+
+        if not any(mob.active for mob in mobs) and not wave_mobs:
+            wave += 1
+            wave_mobs = create_wave(wave)
 
         tick_clock.tick(TICK)
         pygame.display.flip()
@@ -122,7 +150,6 @@ def main():
 
     pygame.quit()
     sys.exit()
-
 
 if __name__ == "__main__":
     main()
