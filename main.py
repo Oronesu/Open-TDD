@@ -95,14 +95,13 @@ def handle_events(toolbar, placing_tower, phantom_tower, towers, money, upgrade_
                 phantom_tower = Towers.Tower(x, y, selected_tower, level=1)
 
 
-
             elif selected_tower in ["Upgrade_Sniper", "Upgrade_Flamethrower", "Upgrade_Missile", "Upgrade_Minigun"]:
                 index = ["Upgrade_Sniper", "Upgrade_Flamethrower", "Upgrade_Missile", "Upgrade_Minigun"].index(
                     selected_tower)
-                if money >= upgrade_prices[index]:
-                    money -= upgrade_prices[index]
-                    upgrade_prices[index] *= 2
-                    levels[index] += 1
+                if money >= upgrade_prices[index]: #Alan:  on vérifie si le joueur possède suffisamment d'argent pour l'amélioration souhaitée
+                    money -= upgrade_prices[index] #Alan: on retire au joueur le montant d'argent correspondant au prix de l'amélioration souhaitée
+                    upgrade_prices[index] *= 2 #Alan: on double le prix de la prochaine amélioration
+                    levels[index] += 1 #Alan: on incrémente le niveau de toutes les tours de ce type
                     for tower in towers:
                         if tower.category == selected_tower.split('_')[1]:
                             tower.upgrade()
@@ -140,25 +139,27 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, money, placi
     timer = f'{minutes:02}:{seconds:02}'
 
     for mob in mobs:
-        if mob.active:
-            reached_end = mob.move()
-            if reached_end:
-                hp = mob.attack(hp)
+        if mob.active: #Alan: pour chaque mob présent sur le plateau de jeu, on vérifie s'il est encore actif
+            reached_end = mob.move() #Alan: si oui, alors on le fait bouger
+            if reached_end: #Alan: puis on regarde s'il a atteint la fin du chemin
+                hp = mob.attack(hp) #Alan: et on retire au joueur de la vie en fonction des dégâts du mob
             else:
-                mob.draw(window)
+                mob.draw(window) #Alan: sinon, on continue de l'afficher à sa prochaine coordonnée
         else:
-            mobs.remove(mob)
+            mobs.remove(mob) #Alan: on supprime le mob s'il n'est plus actif
 
     #Darren
     #Ici on affiche les tours contenus dans la liste des tours placés
     for tower in towers:
         if not tower.isPlaced:
-            if tower.prix <= money:
-                money -= tower.prix #Alan: on déduit le prix de la tour
+            if tower.prix <= money: #ALan: on vérifie si le joueur possède assez d'argent pour acheter la tour souhaitée
+                money -= tower.prix #Alan: on déduit au joueur le montant d'argent correspondant au prix de la tour
                 tower.isPlaced = True
         if tower.isPlaced:
             tower.draw(window)
-            money = tower.attack_mob(mobs, money)
+            money = tower.attack_mob(mobs, money) #Alan: on donne au joueur de l'argent si la tour tue un mob
+            #Alan: la mort du mob est déterminée directement dans la fonction
+            #Alan: on donne au joueur la récompense liée au mob s'il meurt, sinon on lui donne 0
 
     toolbar.draw(window, hp, money, timer, wave, upgrade_prices, levels) #On dessine la toolbar
 
@@ -226,7 +227,7 @@ def main():
 
             if not any(mob.active for mob in mobs) and next_mob_time <= current_time:
                 wave += 1
-                money += wave * (5 % 21)
+                money += (wave%21)*5
                 wave_mobs = create_wave(wave)
 
             tick_clock.tick(TICK)
@@ -239,3 +240,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
