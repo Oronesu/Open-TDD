@@ -15,6 +15,7 @@ class Mob:
         self.path = path
         self.path_index = 0
         properties = self.MOB_PROPERTIES.get(category, {})
+
         self.health = properties.get('health', 0)
         self.absorb = properties.get('absorb', 0)
         self.damage = properties.get('damage', 0)
@@ -26,7 +27,6 @@ class Mob:
         self.rect = pygame.Rect(0, 0, width, height)
         self.rect.center = path[0]
         self.texture=pygame.image.load(f"Textures/{category}.png")
-
         self.active = True
 
     def draw(self, surf):
@@ -36,25 +36,27 @@ class Mob:
         self.active = False
         self.path = None
         self.rect = None
-        self.color = None
 
     def move(self):
-        '''
+        """
         Alan: Fait bouger le mob par une succession de coordonnées jusqu'à la fin du chemin.
         :return: True si le mob a atteint l'arrivée, False sinon (sert pour déduire la vie du joueur
         si le mob arrive au bout du chemin)
-        '''
-        if self.path_index < len(self.path) - 1: #Alan: vérifie si le mob est arrivé au bout du chemin
-            target = self.path[self.path_index + 1] #Alan: le mob prend en cible les prochaines coordonnées qu'il doit atteindre
-            dx, dy = target[0] - self.rect.centerx, target[1] - self.rect.centery #Alan: calcule la distance en abscisse et en ordonnée qui sépare le mob du prochain point
-            dist = (dx ** 2 + dy ** 2) ** 0.5 #Alan: calcule la distance globale entre le mob et le prochain point
-            move_dist = min(self.speed, dist)  #Alan: pour éviter qu'il dépasse le point cible et qu'il se bloque
+        """
+        if self.path_index < len(self.path) - 1:                    #Alan: vérifie si le mob est arrivé au bout du chemin
+            target = self.path[self.path_index + 1]                 #Alan: le mob prend en cible les prochaines coordonnées qu'il doit atteindre
+            dx, dy = (target[0] - self.rect.centerx, target[1]
+                                - self.rect.centery)                #Alan: calcule la distance en abscisse et en ordonnée qui sépare le mob du prochain point
+
+            dist = (dx ** 2 + dy ** 2) ** 0.5                       #Alan: calcule la distance globale entre le mob et le prochain point
+            move_dist = min(self.speed, dist)                       #Alan: pour éviter qu'il dépasse le point cible et qu'il se bloque
+
             if dist == 0:
-                self.path_index += 1 #Alan: permet au mob de cibler le prochain point de path
+                self.path_index += 1            #Alan: permet au mob de cibler le prochain point de path
                 return False
             else:
-                self.rect.centerx += move_dist * dx / dist #Alan: fait bouger le mob en abscisse
-                self.rect.centery += move_dist * dy / dist #Alan: fait bouger le mob en ordonnée
+                self.rect.centerx += move_dist * dx / dist  #Alan: fait bouger le mob en abscisse
+                self.rect.centery += move_dist * dy / dist  #Alan: fait bouger le mob en ordonnée
                 return False
 
         else:
@@ -62,9 +64,9 @@ class Mob:
             return True
 
     def attack(self, health):
-        '''
+        """
         Alan:
         :param health: vie restante du joueur
         :return: le reste de la vie du joueur après l'attaque du mob
-        '''
+        """
         return health - self.damage
