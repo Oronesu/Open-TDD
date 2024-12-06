@@ -8,7 +8,7 @@ class Toolbar:
         self.color = (50, 50, 50)
         self.window_width = window_width
         self.rects = []
-        self.buttons = ["Sniper", "Lance-flammes", "Mortier", "Minigun"]
+        self.buttons = ["Sniper", "Flamethrower", "Missile", "Minigun"]
         self.init_buttons()
 
     def init_buttons(self):
