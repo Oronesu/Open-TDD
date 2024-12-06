@@ -1,5 +1,6 @@
 import pygame
 
+
 class Toolbar:
     def __init__(self, window_width, window_height):
         self.width = 224  # Largeur de la barre d'outils
@@ -7,7 +8,7 @@ class Toolbar:
         self.color = (50, 50, 50)
         self.window_width = window_width
         self.rects = []
-        self.buttons = ["Sniper", "Lance-flammes", "Mortier", "Minigun"]
+        self.buttons = ["Sniper", "Flamethrower", "Missile", "Minigun"]
         self.init_buttons()
 
     def init_buttons(self):

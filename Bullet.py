@@ -8,7 +8,7 @@ class Bullet:
         self.target_x, self.target_y = target_pos
         self.dmg = dmg
         self.speed = speed
-        self.rect = pygame.Rect(self.x, self.y, 3, 3)  # Taille du projectile
+        self.rect = pygame.Rect(self.x, self.y, 5, 5)  # Taille du projectile
         self.color = (255, 150, 150)  # Couleur blanche pour le projectile
 
         dx = self.target_x - self.x
