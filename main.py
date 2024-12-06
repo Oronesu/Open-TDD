@@ -31,6 +31,7 @@ PLACEMENT_RADIUS = 25
 MOB_TYPES = ['Soldier', 'Captain', 'Sergeant', 'Tank', 'Bomber']
 
 
+#Initialisation de la fenêtre
 def init_window():
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Open TDD")
@@ -38,7 +39,7 @@ def init_window():
 
 
 '''---------------------Création des vagues----------------------'''
-
+#Alan
 
 def create_wave(wave_number):
     number_of_mobs = 5 * wave_number
@@ -74,17 +75,26 @@ def is_within_placement_square(x, y):
 
 
 def handle_events(toolbar, placing_tower, phantom_tower, towers, money, upgrade_prices, levels):
+    """
+    Ici on gère  toutes les interactions de l'utilisateur
+    ...
+    """
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             return False, placing_tower, phantom_tower, money, upgrade_prices, levels
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
-            selected_tower = toolbar.is_button_clicked(event.pos)
 
+            #Darren
+            #Si on selectionne une tour on crée un "fantôme" de la tour pour voir où la tour ira
+            selected_tower = toolbar.is_button_clicked(event.pos)
             if selected_tower in ["Sniper", "Flamethrower", "Missile", "Minigun"]:
                 placing_tower = True
                 phantom_tower = Towers.Tower(x, y, selected_tower, level=1)
+
+
 
             elif selected_tower in ["Upgrade_Sniper", "Upgrade_Flamethrower", "Upgrade_Missile", "Upgrade_Minigun"]:
                 index = ["Upgrade_Sniper", "Upgrade_Flamethrower", "Upgrade_Missile", "Upgrade_Minigun"].index(
@@ -97,17 +107,18 @@ def handle_events(toolbar, placing_tower, phantom_tower, towers, money, upgrade_
                         if tower.category == selected_tower.split('_')[1]:
                             tower.upgrade()
 
+            #Darren
+            #Placement des tours
             elif placing_tower:
-                valid_placement, px, py = is_within_placement_square(x, y)
+                valid_placement, px, py = is_within_placement_square(x, y) #Verif que la tour est dans un emplacement
                 if valid_placement:
                     new_tower = Towers.Tower(px, py, phantom_tower.category,
                                 level=levels[toolbar.buttons.index(phantom_tower.category)])
-
-                    if new_tower.is_within_bounds(WIDTH, GAME_AREA_WIDTH):
+                    if new_tower.is_within_bounds(WIDTH, GAME_AREA_WIDTH): #Verif que la tour est dans l'espace de jeu
                         towers.append(new_tower)
                     placing_tower = False
-                    phantom_tower = None
-
+                    phantom_tower = None #On désactive le "fantôme" une fois la tour placée
+        #Tracking de la tour par rapport à la souris
         elif event.type == pygame.MOUSEMOTION and placing_tower:
             x, y = event.pos
             phantom_tower.rect.center = (x, y)
@@ -116,16 +127,17 @@ def handle_events(toolbar, placing_tower, phantom_tower, towers, money, upgrade_
 
 
 def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, money, placing_tower, wave, upgrade_prices, levels):
+    #On affiche l'image de fond
     window.blit(background_image, (0, 0))
-
+    #Ici on dessine le "fantome de la tour"
     if placing_tower and phantom_tower:
         phantom_tower.draw_phantom(window)
 
+    #Paramètres afin de dessiner la toolbar
     elapsed_time = pygame.time.get_ticks() // 1000
     minutes = elapsed_time // 60
     seconds = elapsed_time % 60
     timer = f'{minutes:02}:{seconds:02}'
-    toolbar.draw(window, hp, money, timer, wave, upgrade_prices, levels)
 
     for mob in mobs:
         if mob.active:
@@ -137,16 +149,18 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, money, placi
         else:
             mobs.remove(mob)
 
+    #Darren
+    #Ici on affiche les tours contenus dans la liste des tours placés
     for tower in towers:
         if not tower.isPlaced:
             if tower.prix <= money:
-                money -= tower.prix
+                money -= tower.prix #Alan: on déduit le prix de la tour
                 tower.isPlaced = True
         if tower.isPlaced:
             tower.draw(window)
             money = tower.attack_mob(mobs, money)
 
-    toolbar.draw(window, hp, money, timer, wave, upgrade_prices, levels)
+    toolbar.draw(window, hp, money, timer, wave, upgrade_prices, levels) #On dessine la toolbar
 
     return hp, money
 
