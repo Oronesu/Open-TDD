@@ -16,6 +16,7 @@ class Mob:
         self.path_index = 0
         properties = self.MOB_PROPERTIES.get(category, {})
         self.health = properties.get('health', 0)
+        self.absorb = properties.get('absorb', 0)
         self.damage = properties.get('damage', 0)
         self.reward = properties.get('reward', 0)
         self.speed = properties.get('speed', 0)
@@ -38,22 +39,31 @@ class Mob:
         self.color = None
 
     def move(self):
-        if self.path_index < len(self.path) - 1:
-            target = self.path[self.path_index + 1]
-            dx, dy = target[0] - self.rect.centerx, target[1] - self.rect.centery
-            dist = (dx ** 2 + dy ** 2) ** 0.5
+        '''
+        Fait bouger le mob par une succession de coordonnées jusqu'à la fin du chemin.
+        :return: True si le mob a atteint l'arrivée, False sinon (sert pour déduire la vie du joueur
+        si le mob arrive au bout du chemin)
+        '''
+        if self.path_index < len(self.path) - 1: #vérifie si le mob est arrivé au bout du chemin
+            target = self.path[self.path_index + 1] #le mob prend en cible les prochaines coordonnées qu'il doit atteindre
+            dx, dy = target[0] - self.rect.centerx, target[1] - self.rect.centery #calcule la distance en abscisse et en ordonnée qui sépare le mob du prochain point
+            dist = (dx ** 2 + dy ** 2) ** 0.5 #calcule la distance globale entre le mob et le prochain point
             move_dist = min(self.speed, dist)  # pour éviter qu'il dépasse le point cible et qu'il se bloque
             if dist == 0:
-                self.path_index += 1
+                self.path_index += 1 #permet au mob de cibler le prochain point de path
                 return False
             else:
-                self.rect.centerx += move_dist * dx / dist
-                self.rect.centery += move_dist * dy / dist
+                self.rect.centerx += move_dist * dx / dist #fait bouger le mob en abscisse
+                self.rect.centery += move_dist * dy / dist #fait bouger le mob en ordonnée
                 return False
 
         else:
-            self.delete()
+            self.delete() #on détruit l'entité qui a atteint la fin du chemin
             return True
 
     def attack(self, health):
+        '''
+        :param health: vie restante du joueur
+        :return: le reste de la vie du joueur après l'attaque du mob
+        '''
         return health - self.damage
