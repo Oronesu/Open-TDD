@@ -5,27 +5,34 @@ TICKS_PER_SECOND = 60
 
 class Tower:
     TOWER_PROPERTIES = {
-        'Sniper': {'dmg': 25, 'attack_speed': 2, 'prix': 50, 'range': 200, 'isPlaced': False, 'size': (64, 64)},
-        'Flamethrower': {'dmg': 20, 'attack_speed': 5, 'prix': 50, 'range': 100, 'isPlaced': False, 'size': (64, 64)},
-        'Missile': {'dmg': 200, 'attack_speed': 0.1, 'prix': 50, 'range': 500, 'isPlaced': False, 'size': (64, 64)},
-        'Minigun': {'dmg': 20, 'attack_speed': 10, 'prix': 50, 'range': 100, 'isPlaced': False, 'size': (64, 64)}
+        'Sniper': {'dmg': 25, 'attack_speed': 2, 'prix': 50, 'range': 200, 'size': (64, 64)},
+        'Flamethrower': {'dmg': 20, 'attack_speed': 5, 'prix': 50, 'range': 100, 'size': (64, 64)},
+        'Missile': {'dmg': 200, 'attack_speed': 0.1, 'prix': 50, 'range': 500, 'size': (64, 64)},
+        'Minigun': {'dmg': 20, 'attack_speed': 10, 'prix': 50, 'range': 100, 'size': (64, 64)}
     }
 
-    def __init__(self, x, y, category):
+    def __init__(self, x, y, category, level=1):
         self.category = category
         properties = self.TOWER_PROPERTIES.get(category)
-        self.dmg = properties['dmg']
-        self.atk_spd = properties['attack_speed']
+
+        #Attributs améliorables
+        self.level = level
+        self.dmg = properties['dmg'] * (1.5 ** (level - 1))
+        self.atk_spd = properties['attack_speed'] * (1.5 ** (level - 1))
         self.prix = properties['prix']
+        self.range = properties['range'] * (1.5 ** (level - 1))
+
+        #Attributs pour affichage
         width, height = properties['size']
         self.rect = pygame.Rect(x - width // 2, y - height // 2, width, height)
-        self.range = properties['range']
-        self.isPlaced = properties['isPlaced']
-        self.attack_cooldown = 0
+        self.isPlaced = False
         self.texture = pygame.image.load(f'Textures/{category}.png')
         self.texture_top = pygame.image.load(f'Textures/{category}_top.png')
-        self.cooldown_time = TICKS_PER_SECOND / self.atk_spd
         self.active = True
+
+        #Attributs pour attaque
+        self.attack_cooldown = 0
+        self.cooldown_time = TICKS_PER_SECOND / self.atk_spd
         self.bullets = []
         self.target = None
 
@@ -56,7 +63,6 @@ class Tower:
                     mobs_in_range.append(mob)
         return mobs_in_range
 
-
     def attack_mob(self, mobs, money):
         self.update_bullets(mobs)
         mobs_in_range= self.in_range(mobs)
@@ -65,7 +71,6 @@ class Tower:
 
         if self.attack_cooldown <= 0 and self.target:
             self.target.health -= self.dmg
-            print(self.target.health)
             self.attack_cooldown = self.cooldown_time
             if self.target.health <= 0:
                 money += self.target.reward
@@ -90,3 +95,11 @@ class Tower:
                 if mob.rect is not None and bullet.rect.colliderect(mob.rect):
                     self.bullets.remove(bullet)
                     break
+
+    #Gestion des améliorations
+    def upgrade(self):
+        self.level += 1
+        self.dmg *= 1.5
+        self.atk_spd *= 1.5
+        self.range *= 1.5
+        self.cooldown_time = TICKS_PER_SECOND / self.atk_spd

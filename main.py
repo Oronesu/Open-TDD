@@ -19,36 +19,16 @@ TICK = 30
 # Charger l'image de fond
 background_image = pygame.image.load("Background.png")
 
-PATH = [ (0, 128), (640, 128), (640, 448), (448, 448), (448, 320), (256, 320), (256, 448), (128, 448), (128, 640),
-         (768, 640), (768, 768)
-]
+PATH = [(0, 128), (640, 128), (640, 448), (448, 448), (448, 320), (256, 320), (256, 448), (128, 448), (128, 640),
+        (768, 640), (768, 768)
+        ]
 
-TOWERS_PLACEMENT=[ (96, 32), (288, 32), (480, 32), (736, 160), (160, 224), (352, 224), (544, 224), (160, 352),
-                   (544, 352), (352, 416), (736, 416), (32, 480), (224, 544), (480, 544), (608, 544), (32, 608),
-                   (224, 736), (672, 736)]
+TOWERS_PLACEMENT = [(96, 32), (288, 32), (480, 32), (736, 160), (160, 224), (352, 224), (544, 224), (160, 352),
+                    (544, 352), (352, 416), (736, 416), (32, 480), (224, 544), (480, 544), (608, 544), (32, 608),
+                    (224, 736), (672, 736)]
 
 PLACEMENT_RADIUS = 25
-
-
 MOB_TYPES = ['Soldier', 'Captain', 'Sergeant', 'Tank', 'Bomber']
-
-
-def display_menu(window):
-    rect = pygame.Rect(WIDTH/2, HEIGHT/2, 100, 50)
-    pygame.draw.rect(window, (0, 0, 0), rect)
-    font = pygame.font.SysFont(None, 36)
-    texte_menu = font.render('Welcome to Open-TDD', True, (255, 255, 255))
-    window.blit(texte_menu, (WIDTH/2.5, HEIGHT/3))
-    texte_play = font.render('Play', True, (255, 255, 255))
-    window.blit(texte_play, (WIDTH/1.9, HEIGHT/1.95))
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            return False, False
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if rect.collidepoint(event.pos):
-                return True, True
-    return False, True
-
 
 
 def init_window():
@@ -68,10 +48,11 @@ def create_wave(wave_number):
         wave_mobs.append(Mobs.Mob(PATH, mob_type))
     return wave_mobs
 
+
 def update_wave(mobs, wave_mobs, next_mob_time, current_time):
     if wave_mobs and next_mob_time <= current_time:
         mobs.append(wave_mobs.pop(0))
-        next_mob_time = current_time + random.randint(200, 1500)  # Délai entre 0.2s et 1.5s
+        next_mob_time = current_time + random.randint(200, 1500)
     return next_mob_time
 
 
@@ -92,140 +73,49 @@ def is_within_placement_square(x, y):
     return False, x, y
 
 
-'''---------------------Inputs Utilisateur----------------------'''
-
-
-
-# fonction pour gérer les améliorations des tours
-def upgrade_towers(lvl_s, lvl_lf, lvl_mo, lvl_mi, towers):
-    base_stats = [[10, 2, 50],
-                  [25.0, 1.5, 50.0],
-                  [35, 0.8, 50],
-                  [40, 10, 50],
-                  ]
-    for tower in towers:
-        if tower.category == 'Sniper':
-            level = lvl_s
-            i = 0
-        elif tower.category == 'Lance-flammes':
-            level = lvl_lf
-            i = 1
-        elif tower.category == 'Mortier':
-            level = lvl_mo
-            i = 2
-        elif tower.category == 'Minigun':
-            level = lvl_mi
-            i = 3
-        for j in range(2):
-            base = base_stats[i][[j]]
-            for k in range(1, level):
-                base *= 1.5
-            if j == 0:
-                tower.dmg = base
-            elif j == 1:
-                tower.atk_spd = base
-            elif j == 2:
-                tower.range = base
-    return towers
-
-
-
-
-
-def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers, money, upg_s, upg_lf, upg_mo, upg_mi, lvl_s, lvl_lf, lvl_mo, lvl_mi):
-    tow = ["Sniper", "Lance-flammes", "Mortier", "Minigun"]
-    upg = ["Upgrade_S", "Upgrade_LF", "Upgrade_Mo", "Upgrade_Mi"]
-    selected_tower = None
+def handle_events(toolbar, placing_tower, phantom_tower, towers, money, upgrade_prices, levels):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            return False, placing_tower, phantom_tower, money, upg_s, upg_lf, upg_mo, upg_mi, lvl_s, lvl_lf, lvl_mo, lvl_mi
+            return False, placing_tower, phantom_tower, money, upgrade_prices, levels
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
             selected_tower = toolbar.is_button_clicked(event.pos)
 
-
-            selected_tower = False
-            selected_upg = False
-            if toolbar.is_button_clicked(event.pos) in tow:
-                selected_tower = True
-            if toolbar.is_button_clicked(event.pos) in upg:
-                selected_upg = True
-
-            if selected_tower:
+            if selected_tower in ["Sniper", "Flamethrower", "Missile", "Minigun"]:
                 placing_tower = True
-                phantom_tower = Towers.Tower(x, y, selected_tower)
+                phantom_tower = Towers.Tower(x, y, selected_tower, level=1)
+
+            elif selected_tower in ["Upgrade_Sniper", "Upgrade_Flamethrower", "Upgrade_Missile", "Upgrade_Minigun"]:
+                index = ["Upgrade_Sniper", "Upgrade_Flamethrower", "Upgrade_Missile", "Upgrade_Minigun"].index(
+                    selected_tower)
+                if money >= upgrade_prices[index]:
+                    money -= upgrade_prices[index]
+                    upgrade_prices[index] *= 2
+                    levels[index] += 1
+                    for tower in towers:
+                        if tower.category == selected_tower.split('_')[1]:
+                            tower.upgrade()
 
             elif placing_tower:
                 valid_placement, px, py = is_within_placement_square(x, y)
                 if valid_placement:
-                    new_tower = Towers.Tower(px, py, phantom_tower.category)
+                    new_tower = Towers.Tower(px, py, phantom_tower.category,
+                                level=levels[toolbar.buttons.index(phantom_tower.category)])
+
                     if new_tower.is_within_bounds(WIDTH, GAME_AREA_WIDTH):
                         towers.append(new_tower)
                     placing_tower = False
                     phantom_tower = None
 
-                if selected_upg:
-                    if upg.index(toolbar.is_button_clicked(event.pos)) == 0:
-                        if money >= upg_s:
-                            money -= upg_s
-                            upg_s *= 2
-                            lvl_s += 1
-                    elif upg.index(toolbar.is_button_clicked(event.pos)) == 1:
-                        if money >= upg_lf:
-                            money -= upg_lf
-                            upg_lf *= 2
-                            lvl_lf += 1
-                    elif upg.index(toolbar.is_button_clicked(event.pos)) == 2:
-                        if money >= upg_mo:
-                            money -= upg_mo
-                            upg_mo *= 2
-                            lvl_mo += 1
-                    elif upg.index(toolbar.is_button_clicked(event.pos)) == 3:
-                        if money >= upg_mi:
-                            money -= upg_mi
-                            upg_mi *= 2
-                            lvl_mi += 1
-
-                new_tower = Towers.Tower(x, y, phantom_tower.category)
-                if new_tower.is_within_bounds(WIDTH, GAME_AREA_WIDTH):
-                    towers.append(new_tower)
-                placing_tower = False
-                phantom_tower = None
-
-            if selected_upg:
-                if upg.index(toolbar.is_button_clicked(event.pos)) == 0:
-                    if money >= upg_s:
-                        money -= upg_s
-                        upg_s *= 2
-                        lvl_s += 1
-                elif upg.index(toolbar.is_button_clicked(event.pos)) == 1:
-                    if money >= upg_lf:
-                        money -= upg_lf
-                        upg_lf *= 2
-                        lvl_lf += 1
-                elif upg.index(toolbar.is_button_clicked(event.pos)) == 2:
-                    if money >= upg_mo:
-                        money -= upg_mo
-                        upg_mo *= 2
-                        lvl_mo += 1
-                elif upg.index(toolbar.is_button_clicked(event.pos)) == 3:
-                    if money >= upg_mi:
-                        money -= upg_mi
-                        upg_mi *= 2
-                        lvl_mi += 1
-
-
-
         elif event.type == pygame.MOUSEMOTION and placing_tower:
             x, y = event.pos
-            phantom_tower = Towers.Tower(x, y, phantom_tower.category)
+            phantom_tower.rect.center = (x, y)
 
-    return True, placing_tower, phantom_tower
+    return True, placing_tower, phantom_tower, money, upgrade_prices, levels
 
 
-'''---------------------Affichage des éléments----------------------'''
-def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placing_tower, wave, upg_s, upg_lf, upg_mo, upg_mi, lvl_s, lvl_lf, lvl_mo, lvl_mi):
+def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, money, placing_tower, wave, upgrade_prices, levels):
     window.blit(background_image, (0, 0))
 
     if placing_tower and phantom_tower:
@@ -235,7 +125,7 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placin
     minutes = elapsed_time // 60
     seconds = elapsed_time % 60
     timer = f'{minutes:02}:{seconds:02}'
-    toolbar.draw(window, hp, money, timer, wave, upg_s, upg_lf, upg_mo, upg_mi, lvl_s, lvl_lf, lvl_mo, lvl_mi)
+    toolbar.draw(window, hp, money, timer, wave, upgrade_prices, levels)
 
     for mob in mobs:
         if mob.active:
@@ -245,7 +135,7 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placin
             else:
                 mob.draw(window)
         else:
-            mobs.remove(mob)  # Supprimer les mobs inactifs de la liste
+            mobs.remove(mob)
 
     for tower in towers:
         if not tower.isPlaced:
@@ -256,14 +146,36 @@ def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placin
             tower.draw(window)
             money = tower.attack_mob(mobs, money)
 
-    toolbar.draw(window, hp, money, timer, wave, upg_s, upg_lf, upg_mo, upg_mi, lvl_s, lvl_lf, lvl_mo, lvl_mi)
+    toolbar.draw(window, hp, money, timer, wave, upgrade_prices, levels)
 
     return hp, money
 
-    return hp,money, upg_s, upg_lf, upg_mo, upg_mi
+
+def display_menu(window):
+    window.fill((50, 50, 50))  # Remplir l'écran avec un fond gris foncé
+    rect = pygame.Rect(WIDTH / 2 - 50, HEIGHT / 2 - 25, 100, 50)
+    pygame.draw.rect(window, (0, 0, 0), rect)
+    font = pygame.font.SysFont(None, 36)
+    texte_menu = font.render('Welcome to Open-TDD', True, (255, 255, 255))
+    window.blit(texte_menu, (WIDTH / 2.5, HEIGHT / 3))
+    texte_play = font.render('Play', True, (255, 255, 255))
+    window.blit(texte_play, (WIDTH / 2.9, HEIGHT / 1.95))
+
+    pygame.display.flip()  # Mise à jour de l'écran pour afficher les changements
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            return False, False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if rect.collidepoint(event.pos):
+                return True, True
+
+    return False, True
 
 
 '''---------------------Boucle du jeu----------------------'''
+
+
 def main():
     window = init_window()
     clock = pygame.time.Clock()
@@ -276,10 +188,10 @@ def main():
     phantom_tower = None
 
     hp = 100
-    money = 50000
+    money = 20000
     running = True
-    upg_s = upg_lf = upg_mo = upg_mi = 50
-    lvl_s = lvl_lf = lvl_mo = lvl_mi = 1
+    upgrade_prices = [50, 50, 50, 50]
+    levels = [1, 1, 1, 1]
     wave = 1
 
     next_mob_time = pygame.time.get_ticks()
@@ -287,31 +199,29 @@ def main():
 
     start = False
     while running:
-        running, placing_tower, phantom_tower = handle_events(toolbar, placing_tower, phantom_tower, towers)
-        hp, money = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, money, placing_tower, wave)
         if not start:
             start, running = display_menu(window)
         else:
-            towers = upgrade_towers(lvl_s, lvl_lf, lvl_mo, lvl_mi, towers) #améliore les tours en fonction de leur niveau
+            running, placing_tower, phantom_tower, money, upgrade_prices, levels = (
+                handle_events(toolbar, placing_tower, phantom_tower, towers, money, upgrade_prices, levels))
+            hp, money = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, money, placing_tower, wave,
+                                      upgrade_prices, levels)
 
-            running, placing_tower, phantom_tower, money, upg_s, upg_lf, upg_mo, upg_mi, lvl_s, lvl_lf, lvl_mo, lvl_mi  = handle_events(mobs, toolbar, placing_tower, phantom_tower, towers, money, upg_s, upg_lf, upg_mo, upg_mi, lvl_s, lvl_lf, lvl_mo, lvl_mi)
+            current_time = pygame.time.get_ticks()
+            next_mob_time = update_wave(mobs, wave_mobs, next_mob_time, current_time)
 
-            hp, money, upg_s, upg_lf, upg_mo, upg_mi = draw_elements(window, mobs, towers, toolbar, phantom_tower, hp,money, placing_tower, wave, upg_s, upg_lf, upg_mo, upg_mi, lvl_s, lvl_lf, lvl_mo, lvl_mi)
+            if not any(mob.active for mob in mobs) and next_mob_time <= current_time:
+                wave += 1
+                money += wave * (5 % 21)
+                wave_mobs = create_wave(wave)
 
-        current_time = pygame.time.get_ticks()
-        next_mob_time = update_wave(mobs, wave_mobs, next_mob_time, current_time)
-
-        if not any(mob.active for mob in mobs) and next_mob_time <= current_time:
-            wave += 1
-            money += wave * (5 % 21)
-            wave_mobs = create_wave(wave)
-
-        tick_clock.tick(TICK)
-        pygame.display.flip()
-        clock.tick(FPS)
+            tick_clock.tick(TICK)
+            pygame.display.flip()
+            clock.tick(FPS)
 
     pygame.quit()
     sys.exit()
+
 
 if __name__ == "__main__":
     main()
