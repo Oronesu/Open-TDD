@@ -1,5 +1,6 @@
 import pygame
 
+
 class Toolbar:
     def __init__(self, window_width, window_height):
         self.width = 224  # Largeur de la barre d'outils

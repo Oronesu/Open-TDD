@@ -74,7 +74,7 @@ class Tower:
                 # Créer un projectile vers le mob
                 start_pos = (self.rect.centerx, self.rect.centery)
                 target_pos = (mob.rect.centerx, mob.rect.centery)
-                bullet = Bullet.Bullet(start_pos, target_pos, self.dmg, 40)
+                bullet = Bullet.Bullet(start_pos, target_pos, self.dmg, 30)
                 self.bullets.append(bullet)
 
         return money

@@ -16,14 +16,21 @@ GAME_AREA_WIDTH = WIDTH - 224
 FPS = 60
 TICK = 30
 MONEY = 500
-BACKGROUND_COLOR = (64, 68, 29)
+BACKGROUND_IMAGE_PATH = "Background.png"
+
+# Charger l'image de fond
+background_image = pygame.image.load(BACKGROUND_IMAGE_PATH)
+
 PATH = [
-    (0, 100), (50, 100), (100, 100), (150, 100), (200, 100),
-    (200, 150), (200, 200), (250, 200), (300, 200), (350, 200),
-    (400, 200), (400, 250), (400, 300), (450, 300), (500, 300),
-    (550, 300), (550, 350), (550, 400), (600, 400), (650, 400),
-    (700, 400), (750, 400), (800, 400)
+    (0, 125),(575,125),(575,275),(175,275),(175,725),(425,725),(425,525),(575,525),(575,725),(800,725)
 ]
+
+TOWERS_PLACEMENT=[
+    (25,200),(75,200),(125,200)
+]
+
+PLACEMENT_RADIUS = 25
+
 
 MOB_TYPES = ['Soldier', 'Captain', 'Sergeant', 'Tank', 'Boss']
 
@@ -32,8 +39,10 @@ def init_window():
     pygame.display.set_caption("Open TDD")
     return window
 
+
 '''---------------------Création des vagues----------------------'''
-#Alan
+
+
 def create_wave(wave_number):
     number_of_mobs = 5 * wave_number
     wave_mobs = []
@@ -48,8 +57,21 @@ def update_wave(mobs, wave_mobs, next_mob_time, current_time):
         next_mob_time = current_time + random.randint(200, 1500)  # Délai entre 0.2s et 1.5s
     return next_mob_time
 
+
+'''---------------------Vérification de la zone de placement----------------------'''
+
+
+def is_within_placement_radius(x, y):
+    for px, py in TOWERS_PLACEMENT:
+        distance = ((x - px) ** 2 + (y - py) ** 2) ** 0.5
+        if distance <= PLACEMENT_RADIUS:
+            return True, px, py
+    return False, x, y
+
+
 '''---------------------Inputs Utilisateur----------------------'''
-#Darren et/ou Alan
+
+
 def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
     selected_tower = None
     for event in pygame.event.get():
@@ -63,21 +85,25 @@ def handle_events(mobs, toolbar, placing_tower, phantom_tower, towers):
                 placing_tower = True
                 phantom_tower = Towers.Tower(x, y, selected_tower)
             elif placing_tower:
-                new_tower = Towers.Tower(x, y, phantom_tower.category)
-                if new_tower.is_within_bounds(WIDTH, GAME_AREA_WIDTH):
-                    towers.append(new_tower)
-                placing_tower = False
-                phantom_tower = None
+                valid_placement, px, py = is_within_placement_radius(x, y)
+                if valid_placement:
+                    new_tower = Towers.Tower(px, py, phantom_tower.category)
+                    if new_tower.is_within_bounds(WIDTH, GAME_AREA_WIDTH):
+                        towers.append(new_tower)
+                    placing_tower = False
+                    phantom_tower = None
         elif event.type == pygame.MOUSEMOTION and placing_tower:
             x, y = event.pos
             phantom_tower = Towers.Tower(x, y, phantom_tower.category)
 
     return True, placing_tower, phantom_tower
 
+
 '''---------------------Affichage des éléments----------------------'''
-#Darren et Alan
+
+
 def draw_elements(window, mobs, towers, toolbar, phantom_tower, hp, money, placing_tower, wave):
-    window.fill(BACKGROUND_COLOR)
+    window.blit(background_image, (0, 0))
 
     if placing_tower and phantom_tower:
         phantom_tower.draw_phantom(window)
