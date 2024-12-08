@@ -180,8 +180,8 @@ import pygame
 
 
 def display_menu(window):
-    window.fill((50, 50, 50))  # Remplir l'écran avec un fond gris foncé
-
+    bg_image = pygame.image.load("Textures/MainBG.png")
+    window.blit(bg_image,(0,0))  # Remplir l'écran avec un fond gris foncé
     # Définir la police
     font = pygame.font.Font(f"Textures/new_monzane.otf", 36)
     texte_menu = font.render('Welcome to Open-TDD', True, (255, 255, 255))
