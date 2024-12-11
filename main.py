@@ -207,31 +207,34 @@ def display_menu(window):
     return False, True
 
 
-'''---------------------Boucle du jeu----------------------'''
-
-
-def main():
-    window = init_window()
-    clock = pygame.time.Clock()
-    tick_clock = pygame.time.Clock()
-
+def init_game():
+    """ Fonction pour initialiser les variables de jeu """
+    global mobs, towers, toolbar, placing_tower, phantom_tower, hp, money, running, upgrade_prices, levels, wave, next_mob_time, wave_mobs, start
     mobs = []
     towers = []
     toolbar = Toolbar.Toolbar(WIDTH, HEIGHT)
     placing_tower = False
     phantom_tower = None
-
     hp = 100
     money = 20000
     running = True
     upgrade_prices = [50, 50, 50, 50]
     levels = [1, 1, 1, 1]
     wave = 1
-
     next_mob_time = pygame.time.get_ticks()
     wave_mobs = create_wave(wave)
-
     start = False
+
+'''---------------------Boucle du jeu----------------------'''
+
+def main():
+    global mobs, towers, toolbar, placing_tower, phantom_tower, hp, money, running, upgrade_prices, levels, wave, next_mob_time, wave_mobs, start
+    window = init_window()
+    clock = pygame.time.Clock()
+    tick_clock = pygame.time.Clock()
+
+    init_game()
+
     while running:
         if not start:
             start, running = display_menu(window)
@@ -246,8 +249,11 @@ def main():
 
             if not any(mob.active for mob in mobs) and next_mob_time <= current_time:
                 wave += 1
-                money += (wave%21)*5
+                money += (wave % 21) * 5
                 wave_mobs = create_wave(wave)
+
+            if hp <= 0:
+                init_game()
 
             tick_clock.tick(TICK)
             pygame.display.flip()
